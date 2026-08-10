@@ -38,6 +38,7 @@
         <button class="primary-action" @click="addReminder">＋ {{ t('wellness.addReminder') }}</button>
         <button class="secondary-action" @click="showHealthRecord">{{ t('wellness.healthRecord') }}</button>
       </view>
+      <text v-if="sharedNotice" class="shared-notice">此记录已加入家庭共享</text>
     </view>
   </PageLayout>
 </template>
@@ -45,6 +46,7 @@
 <script>
 import PageLayout from '@/components/PageLayout.vue'
 import { i18nMixin } from '@/utils/i18n.js'
+import { getGuardian } from '@/utils/auth.js'
 
 export default {
   mixins: [i18nMixin],
@@ -54,6 +56,7 @@ export default {
   data() {
     return {
       recordedCount: 3,
+      sharedNotice: false,
       metrics: [
         { key: 'heartRate', icon: '♥', name: '心率', value: '72', unit: '次/分钟' },
         { key: 'bloodPressure', icon: '压', name: '血压', value: '128 / 78', unit: 'mmHg' },
@@ -103,6 +106,8 @@ export default {
           this.recordedCount = Math.min(4, this.recordedCount + 1)
           this.persist()
           uni.showToast({ title: this.t('wellness.saved'), icon: 'success' })
+          const guardian = getGuardian()
+          this.sharedNotice = Boolean(guardian && guardian.connected && guardian.sharing && guardian.sharing.health)
         }
       })
     },
@@ -165,4 +170,5 @@ export default {
 .primary-action, .secondary-action { flex: 1; height: 104rpx; border-radius: 20rpx; font-size: 32rpx; line-height: 104rpx; }
 .primary-action { background: #01884d; color: #fff; }
 .secondary-action { background: #eef4f0; color: #075f38; }
+.shared-notice { display: block; margin-top: 18rpx; text-align: center; color: #397157; font-size: 26rpx; }
 </style>

@@ -75,6 +75,29 @@
         "navigationStyle": "custom",
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "登录" }
+    },
+    {
+      "path": "pages/auth/verify-code",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "验证码登录" }
+    },
+    {
+      "path": "pages/auth/bind-email",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "绑定邮箱" }
+    },
+    {
+      "path": "pages/auth/login-success",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "登录成功" }
+    },
+    {
+      "path": "pages/account/family-guardian",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "家庭监护"
+      }
     }
   ],
   "globalStyle": {

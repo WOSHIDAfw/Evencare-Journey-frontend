@@ -22,6 +22,7 @@
 <script>
 import PageLayout from '@/components/PageLayout.vue'
 import { i18nMixin } from '@/utils/i18n.js'
+import { getGuardian } from '@/utils/auth.js'
 
 export default {
   mixins: [i18nMixin],
@@ -42,7 +43,16 @@ export default {
         cancelText: this.t('common.cancel'),
         confirmText: this.t('security.confirmHelpButton'),
         confirmColor: '#E53935',
-        success: ({ confirm }) => { if (confirm) this.chooseService() }
+        success: ({ confirm }) => {
+          if (!confirm) return
+          const guardian = getGuardian()
+          if (guardian && guardian.connected && guardian.sharing && guardian.sharing.emergency) {
+            uni.showToast({ title: `已通知紧急联系人：${guardian.name}`, icon: 'none', duration: 1800 })
+            setTimeout(() => this.chooseService(), 500)
+          } else {
+            this.chooseService()
+          }
+        }
       })
     },
     chooseService() {

@@ -16,10 +16,14 @@
         </view>
         <text class="setting-row__arrow">›</text>
       </view>
-      <view v-for="(group, groupIndex) in settingGroups" :key="groupIndex" class="setting-group">
-        <view v-for="item in group" :key="item.key" class="setting-row" @click="openSetting(item)">
+      <view v-for="group in settingGroups" :key="group.title" class="group-wrap">
+        <text class="group-title">{{ t(group.title) }}</text>
+        <view class="setting-group">
+        <view v-for="item in group.items" :key="item.key" class="setting-row" @click="openSetting(item)">
+          <text v-if="item.icon" class="setting-row__icon">{{ item.icon }}</text>
           <text :class="{ 'danger-text': item.key === 'logout' }">{{ t(item.labelKey) }}</text>
           <text v-if="item.key !== 'logout'" class="setting-row__arrow">›</text>
+        </view>
         </view>
       </view>
       <view v-if="showLanguagePanel" class="language-mask" @click="showLanguagePanel = false">
@@ -39,6 +43,7 @@
 <script>
 import PageLayout from '@/components/PageLayout.vue'
 import { i18nMixin, localeOptions, setLocale } from '@/utils/i18n.js'
+import { logout } from '@/utils/auth.js'
 
 export default {
   mixins: [i18nMixin],
@@ -50,10 +55,10 @@ export default {
       showLanguagePanel: false,
       languages: localeOptions,
       settingGroups: [
-        [{ key: 'profile', labelKey: 'settings.profile' }, { key: 'contacts', labelKey: 'settings.emergencyContacts' }, { key: 'favorites', labelKey: 'settings.favorites' }, { key: 'trips', labelKey: 'settings.trips' }],
-        [{ key: 'notifications', labelKey: 'settings.notifications' }, { key: 'seniorMode', labelKey: 'settings.seniorMode' }, { key: 'language', labelKey: 'settings.languageSettings' }],
-        [{ key: 'privacy', labelKey: 'settings.privacy' }, { key: 'safety', labelKey: 'settings.safety' }, { key: 'agreement', labelKey: 'settings.agreement' }],
-        [{ key: 'feedback', labelKey: 'settings.feedback' }, { key: 'about', labelKey: 'settings.about' }, { key: 'logout', labelKey: 'settings.logout' }]
+        { title: 'settings.accountGroup', items: [{ key: 'profile', labelKey: 'settings.profile' }, { key: 'guardian', labelKey: 'settings.familyGuardian', icon: '♡' }, { key: 'contacts', labelKey: 'settings.emergencyContacts' }, { key: 'favorites', labelKey: 'settings.favorites' }, { key: 'trips', labelKey: 'settings.trips' }] },
+        { title: 'settings.usageGroup', items: [{ key: 'notifications', labelKey: 'settings.notifications' }, { key: 'seniorMode', labelKey: 'settings.seniorMode' }, { key: 'language', labelKey: 'settings.languageSettings' }] },
+        { title: 'settings.securityGroup', items: [{ key: 'privacy', labelKey: 'settings.privacy' }, { key: 'safety', labelKey: 'settings.safety' }] },
+        { title: 'settings.aboutGroup', items: [{ key: 'agreement', labelKey: 'settings.agreement' }, { key: 'feedback', labelKey: 'settings.feedback' }, { key: 'about', labelKey: 'settings.about' }, { key: 'logout', labelKey: 'settings.logout' }] }
       ]
     }
   },
@@ -73,8 +78,12 @@ export default {
         this.showLanguagePanel = true
         return
       }
+      if (item.key === 'guardian') {
+        uni.navigateTo({ url: '/pages/account/family-guardian' })
+        return
+      }
       if (item.key === 'logout') {
-        uni.showModal({ title: this.t('settings.logout'), content: this.t('settings.logoutConfirm'), cancelText: this.t('common.cancel'), confirmText: this.t('common.confirm'), confirmColor: '#E53935' })
+        uni.showModal({ title: this.t('settings.logout'), content: this.t('settings.logoutConfirm'), cancelText: this.t('common.cancel'), confirmText: this.t('common.confirm'), confirmColor: '#E53935', success: ({ confirm }) => { if (confirm) { logout(); uni.reLaunch({ url: '/pages/auth/login' }) } } })
         return
       }
       uni.showToast({ title: `${this.t(item.labelKey)}：${this.t('common.improving')}`, icon: 'none' })
@@ -95,8 +104,12 @@ export default {
 .language-card__content { display: flex; flex: 1; flex-direction: column; margin-left: 22rpx; }
 .language-card__title { color: #173e2d; font-size: 34rpx; font-weight: 700; }
 .language-card__current { margin-top: 4rpx; color: #4d685b; font-size: 28rpx; }
-.setting-group { margin-top: 28rpx; border: 2rpx solid #e8edea; border-radius: 24rpx; overflow: hidden; }
+.group-wrap { margin-top: 28rpx; }
+.group-title { display: block; margin: 0 8rpx 12rpx; color: #68736d; font-size: 27rpx; }
+.setting-group { border: 2rpx solid #e8edea; border-radius: 24rpx; overflow: hidden; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; min-height: 104rpx; padding: 0 28rpx; border-bottom: 2rpx solid #edf1ef; color: #222; font-size: 34rpx; }
+.setting-row>text:nth-child(2):not(.setting-row__arrow) { flex: 1; }
+.setting-row__icon { width: 56rpx; color: #01884d; font-size: 38rpx; }
 .setting-row:last-child { border-bottom: none; }
 .setting-row__arrow { color: #8a938e; font-size: 52rpx; }
 .danger-text { color: #d93632; font-weight: 600; }
