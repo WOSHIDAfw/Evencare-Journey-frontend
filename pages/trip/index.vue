@@ -27,7 +27,7 @@
 
         <view class="trip-header__welcome">
           <text class="trip-header__greeting">{{ greeting }}，{{ userInfo.name }}</text>
-          <text class="trip-header__hint">今天想去哪里看看？</text>
+          <text class="trip-header__hint">{{ t('trip.question') }}</text>
         </view>
       </view>
 
@@ -35,7 +35,7 @@
       <view class="trip-search" @tap="onSearchTap">
         <view class="trip-search__inner">
           <uni-icons type="search" size="20" color="#999999" />
-          <text class="trip-search__placeholder">搜索景点、医院、公园等</text>
+          <text class="trip-search__placeholder">{{ t('trip.search') }}</text>
           <view class="trip-search__voice" @tap.stop="onSearchTap">
             <uni-icons type="mic" size="20" color="#01884D" />
           </view>
@@ -45,8 +45,8 @@
       <!-- 今日出行 -->
       <view class="trip-today">
         <view class="trip-today__header">
-          <text class="trip-today__title">今日出行</text>
-          <text class="trip-today__detail" @tap="onTripDetailTap">查看详情</text>
+          <text class="trip-today__title">{{ t('trip.today') }}</text>
+          <text class="trip-today__detail" @tap="onTripDetailTap">{{ t('trip.details') }}</text>
         </view>
 
         <view class="trip-today__card">
@@ -62,14 +62,14 @@
             </view>
           </view>
           <view class="trip-today__card-btn" @tap="onTripDetailTap">
-            <text class="trip-today__card-btn-text">查看行程</text>
+            <text class="trip-today__card-btn-text">{{ t('trip.viewTrip') }}</text>
           </view>
         </view>
       </view>
 
       <!-- 为您推荐 -->
       <view class="trip-section">
-        <SectionHeader title="为您推荐" />
+        <SectionHeader :title="t('trip.recommended')" />
         <scroll-view class="place-scroll" scroll-x :show-scrollbar="false" enable-flex>
           <view class="place-scroll__track">
             <PlaceCard
@@ -83,7 +83,7 @@
 
       <!-- 轻松游览 -->
       <view class="trip-section">
-        <SectionHeader title="轻松游览" />
+        <SectionHeader :title="t('trip.easy')" />
         <scroll-view class="place-scroll" scroll-x :show-scrollbar="false" enable-flex>
           <view class="place-scroll__track">
             <PlaceCard
@@ -97,7 +97,7 @@
 
       <!-- 康养推荐 -->
       <view class="trip-section">
-        <SectionHeader title="康养推荐" />
+        <SectionHeader :title="t('trip.wellness')" />
         <scroll-view class="place-scroll" scroll-x :show-scrollbar="false" enable-flex>
           <view class="place-scroll__track">
             <PlaceCard
@@ -111,7 +111,7 @@
 
       <!-- 长者热门 -->
       <view class="trip-section trip-section--last">
-        <SectionHeader title="长者热门" />
+        <SectionHeader :title="t('trip.popular')" />
         <scroll-view class="place-scroll" scroll-x :show-scrollbar="false" enable-flex>
           <view class="place-scroll__track">
             <PlaceCard
@@ -140,8 +140,10 @@ import {
   userInfo
 } from '@/utils/mockData.js'
 import { getFinalTripPlaces, buildRouteSummary } from '@/utils/tripUtils.js'
+import { i18nMixin } from '@/utils/i18n.js'
 
 export default {
+  mixins: [i18nMixin],
   components: {
     SectionHeader,
     PlaceCard
@@ -162,9 +164,9 @@ export default {
   computed: {
     greeting() {
       const hour = new Date().getHours()
-      if (hour < 12) return '上午好'
-      if (hour < 18) return '下午好'
-      return '晚上好'
+      if (hour < 12) return this.t('trip.morning')
+      if (hour < 18) return this.t('trip.afternoon')
+      return this.t('trip.evening')
     }
   },
   onReady() {
@@ -187,24 +189,29 @@ export default {
       const final = getFinalTripPlaces()
       if (final.length > 0) {
         this.displayTodayTrip = {
-          title: '今日行程',
+          title: this.t('trip.today'),
           route: buildRouteSummary(final),
-          departTime: `预计 ${final[0].scheduleTime || '10:30'} 出发`,
-          summary: `${final.length} 个地点 · 约 ${final.length * 1.8} 公里`
+          departTime: this.t('trip.estimatedDeparture', { time: final[0].scheduleTime || '10:30' }),
+          summary: this.t('trip.tripSummary', { count: final.length, distance: final.length * 1.8 })
         }
       } else {
-        this.displayTodayTrip = { ...todayTrip }
+        this.displayTodayTrip = {
+          ...todayTrip,
+          title: this.t('trip.today'),
+          departTime: this.t('trip.estimatedDeparture', { time: '10:30' }),
+          summary: this.t('trip.tripSummary', { count: 3, distance: '5.2' })
+        }
       }
     },
     onNotificationTap() {
       uni.showToast({
-        title: '暂无新消息',
+        title: this.t('trip.noMessages'),
         icon: 'none'
       })
     },
     onMoreTap() {
       uni.showActionSheet({
-        itemList: ['切换城市', '行程设置', '帮助']
+        itemList: [this.t('trip.switchCity'), this.t('trip.tripSettings'), this.t('trip.help')]
       })
     },
     onSearchTap() {

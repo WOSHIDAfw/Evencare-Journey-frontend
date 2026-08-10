@@ -1,18 +1,18 @@
 <template>
-  <PageLayout page-title="安全中心">
+  <PageLayout :page-title="t('security.title')">
     <view class="security">
-      <text class="security__hint">如遇紧急情况，请立即使用 SOS 求助。</text>
+      <text class="security__hint">{{ t('security.hint') }}</text>
       <view class="sos-area">
         <view class="sos-ring sos-ring--outer">
           <view class="sos-ring sos-ring--inner">
             <button class="sos-button" @click="requestSOS">SOS</button>
           </view>
         </view>
-        <text class="sos-caption">紧急求助</text>
+        <text class="sos-caption">{{ t('security.emergencyHelp') }}</text>
       </view>
       <view class="setting-list">
-        <view v-for="item in safetyItems" :key="item" class="setting-row" @click="openFeature(item)">
-          <text>{{ item }}</text><text class="setting-row__arrow">›</text>
+        <view v-for="item in safetyItems" :key="item.labelKey" class="setting-row" @click="openFeature(item)">
+          <text>{{ t(item.labelKey) }}</text><text class="setting-row__arrow">›</text>
         </view>
       </view>
     </view>
@@ -21,41 +21,46 @@
 
 <script>
 import PageLayout from '@/components/PageLayout.vue'
+import { i18nMixin } from '@/utils/i18n.js'
 
 export default {
+  mixins: [i18nMixin],
   components: {
     PageLayout
   },
   data() {
-    return { safetyItems: ['紧急联系人', '当前位置共享', '附近医院', 'SOS 设置'] }
+    return { safetyItems: [
+      { labelKey: 'security.contacts' }, { labelKey: 'security.shareLocation' },
+      { labelKey: 'security.hospitals' }, { labelKey: 'security.sosSettings' }
+    ] }
   },
   methods: {
     requestSOS() {
       uni.showModal({
-        title: '紧急求助',
-        content: '确认发起紧急求助吗？',
-        cancelText: '取消',
-        confirmText: '确认求助',
+        title: this.t('security.emergencyHelp'),
+        content: this.t('security.confirmHelp'),
+        cancelText: this.t('common.cancel'),
+        confirmText: this.t('security.confirmHelpButton'),
         confirmColor: '#E53935',
         success: ({ confirm }) => { if (confirm) this.chooseService() }
       })
     },
     chooseService() {
       uni.showActionSheet({
-        itemList: ['公安报警 110', '医疗急救 120', '消防救援 119'],
+        itemList: [this.t('security.police'), this.t('security.medical'), this.t('security.fire')],
         success: ({ tapIndex }) => {
-          const services = ['110 公安报警', '120 医疗急救', '119 消防救援']
+          const services = [this.t('security.police'), this.t('security.medical'), this.t('security.fire')]
           uni.showModal({
-            title: '确认联系',
-            content: `即将联系 ${services[tapIndex]}，当前为模拟呼叫，不会自动拨号。`,
+            title: this.t('security.confirmContact'),
+            content: this.t('security.simulatedCall', { service: services[tapIndex] }),
             showCancel: false,
-            confirmText: '我知道了'
+            confirmText: this.t('security.understood')
           })
         }
       })
     },
-    openFeature(name) {
-      uni.showToast({ title: `${name}功能正在完善`, icon: 'none' })
+    openFeature(item) {
+      uni.showToast({ title: `${this.t(item.labelKey)}：${this.t('common.improving')}`, icon: 'none' })
     }
   }
 }

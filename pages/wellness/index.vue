@@ -1,42 +1,42 @@
 <template>
-  <PageLayout page-title="康养中心">
+  <PageLayout :page-title="t('wellness.title')">
     <view class="wellness">
-      <text class="subtitle">关注健康状态，安心享受每一天。</text>
+      <text class="subtitle">{{ t('wellness.subtitle') }}</text>
 
       <view class="overview">
-        <text class="overview__label">今日状态</text>
-        <text class="overview__value">整体良好</text>
-        <text class="overview__hint">今日已记录 {{ recordedCount }} 项健康数据</text>
+        <text class="overview__label">{{ t('wellness.todayStatus') }}</text>
+        <text class="overview__value">{{ t('wellness.good') }}</text>
+        <text class="overview__hint">{{ t('wellness.recorded', { count: recordedCount }) }}</text>
       </view>
 
-      <view class="section-heading">健康指标</view>
+      <view class="section-heading">{{ t('wellness.metrics') }}</view>
       <view class="metrics">
         <view v-for="metric in metrics" :key="metric.key" class="metric-card">
           <view class="metric-card__icon">{{ metric.icon }}</view>
-          <text class="metric-card__name">{{ metric.name }}</text>
+          <text class="metric-card__name">{{ metricLabel(metric) }}</text>
           <text class="metric-card__value">{{ metric.value }}<text class="metric-card__unit"> {{ metric.unit }}</text></text>
-          <button class="record-button" @click="recordMetric(metric)">记录</button>
+          <button class="record-button" @click="recordMetric(metric)">{{ t('wellness.record') }}</button>
         </view>
       </view>
 
-      <view class="section-heading">健康提醒</view>
+      <view class="section-heading">{{ t('wellness.reminders') }}</view>
       <view class="reminders">
         <view v-for="(reminder, index) in reminders" :key="reminder.name" class="reminder-row">
           <view class="reminder-row__icon">{{ reminder.icon }}</view>
           <view class="reminder-row__content" @click="selectReminderTime(index)">
-            <text class="reminder-row__name">{{ reminder.name }}</text>
-            <text class="reminder-row__time">{{ reminder.label || ('每天 ' + reminder.time) }}</text>
+            <text class="reminder-row__name">{{ reminderLabel(reminder) }}</text>
+            <text class="reminder-row__time">{{ reminder.labelKey ? t(reminder.labelKey) : t('wellness.everyDay', { time: reminder.time }) }}</text>
           </view>
           <switch :checked="reminder.enabled" color="#01884D" @change="toggleReminder(index, $event)" />
           <picker mode="time" :value="reminder.time" @change="updateReminderTime(index, $event)">
-            <view class="edit-time">修改</view>
+            <view class="edit-time">{{ t('wellness.edit') }}</view>
           </picker>
         </view>
       </view>
 
       <view class="quick-actions">
-        <button class="primary-action" @click="addReminder">＋ 添加提醒</button>
-        <button class="secondary-action" @click="showHealthRecord">健康记录</button>
+        <button class="primary-action" @click="addReminder">＋ {{ t('wellness.addReminder') }}</button>
+        <button class="secondary-action" @click="showHealthRecord">{{ t('wellness.healthRecord') }}</button>
       </view>
     </view>
   </PageLayout>
@@ -44,8 +44,10 @@
 
 <script>
 import PageLayout from '@/components/PageLayout.vue'
+import { i18nMixin } from '@/utils/i18n.js'
 
 export default {
+  mixins: [i18nMixin],
   components: {
     PageLayout
   },
@@ -59,11 +61,11 @@ export default {
         { key: 'temperature', icon: '温', name: '体温', value: '36.5', unit: '℃' }
       ],
       reminders: [
-        { icon: '药', name: '用药提醒', time: '08:00', enabled: true },
-        { icon: '水', name: '饮水提醒', time: '10:00', label: '每 2 小时', enabled: true },
-        { icon: '压', name: '血压测量提醒', time: '09:00', enabled: true },
-        { icon: '动', name: '运动提醒', time: '16:00', enabled: false },
-        { icon: '休', name: '休息提醒', time: '21:30', enabled: true }
+        { icon: '药', name: '用药提醒', nameKey: 'wellness.medication', time: '08:00', enabled: true },
+        { icon: '水', name: '饮水提醒', nameKey: 'wellness.hydration', time: '10:00', labelKey: 'wellness.everyTwoHours', enabled: true },
+        { icon: '压', name: '血压测量提醒', nameKey: 'wellness.pressureReminder', time: '09:00', enabled: true },
+        { icon: '动', name: '运动提醒', nameKey: 'wellness.exercise', time: '16:00', enabled: false },
+        { icon: '休', name: '休息提醒', nameKey: 'wellness.rest', time: '21:30', enabled: true }
       ]
     }
   },
@@ -74,6 +76,13 @@ export default {
     if (stored && Number.isFinite(stored.recordedCount)) this.recordedCount = stored.recordedCount
   },
   methods: {
+    metricLabel(metric) {
+      const keys = { heartRate: 'wellness.heartRate', bloodPressure: 'wellness.bloodPressure', bloodOxygen: 'wellness.bloodOxygen', temperature: 'wellness.temperature' }
+      return this.t(keys[metric.key])
+    },
+    reminderLabel(reminder) {
+      return reminder.nameKey ? this.t(reminder.nameKey) : reminder.name
+    },
     persist() {
       uni.setStorageSync('wellnessData', {
         metrics: this.metrics,
@@ -83,8 +92,8 @@ export default {
     },
     recordMetric(metric) {
       uni.showModal({
-        title: `记录${metric.name}`,
-        content: `请输入${metric.name}数值`,
+        title: `${this.t('wellness.record')} ${this.metricLabel(metric)}`,
+        content: this.t('wellness.enterValue', { name: this.metricLabel(metric) }),
         editable: true,
         placeholderText: metric.value,
         success: ({ confirm, content }) => {
@@ -93,7 +102,7 @@ export default {
           metric.value = value
           this.recordedCount = Math.min(4, this.recordedCount + 1)
           this.persist()
-          uni.showToast({ title: '记录已保存', icon: 'success' })
+          uni.showToast({ title: this.t('wellness.saved'), icon: 'success' })
         }
       })
     },
@@ -109,21 +118,21 @@ export default {
     selectReminderTime() {},
     addReminder() {
       uni.showModal({
-        title: '添加提醒',
-        content: '请输入提醒名称',
+        title: this.t('wellness.addReminder'),
+        content: this.t('wellness.reminderName'),
         editable: true,
-        placeholderText: '例如：散步提醒',
+        placeholderText: this.t('wellness.reminderExample'),
         success: ({ confirm, content }) => {
           const name = String(content || '').trim()
           if (!confirm || !name) return
           this.reminders.push({ icon: '醒', name, time: '09:00', enabled: true })
           this.persist()
-          uni.showToast({ title: '已添加，可修改时间', icon: 'none' })
+          uni.showToast({ title: this.t('wellness.added'), icon: 'none' })
         }
       })
     },
     showHealthRecord() {
-      uni.showToast({ title: '健康记录功能正在完善', icon: 'none' })
+      uni.showToast({ title: this.t('wellness.healthComing'), icon: 'none' })
     }
   }
 }

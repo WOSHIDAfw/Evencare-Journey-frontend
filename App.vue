@@ -1,9 +1,13 @@
 <script>
+import { initLocale, applyTabBarLabels } from '@/utils/i18n.js'
+
 export default {
   onLaunch() {
+    initLocale()
     console.log('银发悠旅 App Launch')
   },
   onShow() {
+    applyTabBarLabels()
     console.log('银发悠旅 App Show')
   },
   onHide() {
