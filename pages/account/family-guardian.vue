@@ -41,7 +41,7 @@ export default {
   onLoad(){const info=uni.getSystemInfoSync();this.statusBarHeight=info.statusBarHeight||20;this.guardian=getGuardian()},
   methods:{
     goBack(){uni.navigateBack()},persist(){uni.setStorageSync(GUARDIAN_KEY,this.guardian)},
-    copyCode(){uni.setClipboardData({data:'YF8888'} )},shareInvite(){uni.showToast({title:'分享功能正在完善',icon:'none'})},
+    copyCode(){uni.setClipboardData({data:'YF8888'} )},shareInvite(){uni.setClipboardData({data:'银发悠旅家庭邀请码：YF8888',success:()=>uni.showToast({title:'邀请内容已复制，请发送给家属',icon:'none'})})},
     connect(){if(this.inputCode.toUpperCase()!=='CHILD01')return uni.showToast({title:'邀请码无效，请重新输入',icon:'none'});this.guardian={connected:true,name:'李晓雨',relation:'女儿',phone:'138 **** 6688',notifications:{health:true,sos:true,trip:true},sharing:{trip:true,health:true,emergency:true}};this.persist();this.panel='';uni.showToast({title:'家庭连接已建立',icon:'success'})},
     updateSetting(group,key,event){this.guardian[group][key]=event.detail.value;this.persist()},
     unlink(){uni.showModal({title:'解除家庭监护',content:'确认解除与李晓雨的家庭监护连接吗？',cancelText:'取消',confirmText:'确认解除',confirmColor:'#E53935',success:({confirm})=>{if(confirm){uni.removeStorageSync(GUARDIAN_KEY);this.guardian=null;uni.showToast({title:'已解除连接',icon:'none'})}}})}

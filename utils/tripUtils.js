@@ -20,7 +20,7 @@ export const DEFAULT_SCHEDULE_TIMES = ['10:30', '12:30', '15:30', '17:00', '18:3
 export function assignScheduleToPlaces(places) {
   return (places || []).map((place, index) => ({
     ...place,
-    scheduleTime: DEFAULT_SCHEDULE_TIMES[index] || DEFAULT_SCHEDULE_TIMES[DEFAULT_SCHEDULE_TIMES.length - 1],
+    scheduleTime: place.scheduleTime || place.recommendedTime || DEFAULT_SCHEDULE_TIMES[index] || DEFAULT_SCHEDULE_TIMES[DEFAULT_SCHEDULE_TIMES.length - 1],
     visitMinutes: place.visitMinutes || 90,
     visitLabel: formatVisitDuration(place.visitMinutes || 90)
   }))
@@ -65,6 +65,14 @@ export function getFinalTripPlaces() {
 
 export function saveFinalTripPlaces(places) {
   const scheduled = assignScheduleToPlaces(enrichPlacesWithCoords(places))
+  uni.setStorageSync(STORAGE_KEYS.FINAL, scheduled)
+  return scheduled
+}
+
+/** 同步保存编辑态和最终行程，避免两个页面读取到不同版本。 */
+export function saveTripPlaces(places) {
+  const scheduled = assignScheduleToPlaces(enrichPlacesWithCoords(places))
+  uni.setStorageSync(STORAGE_KEYS.SELECTED, scheduled)
   uni.setStorageSync(STORAGE_KEYS.FINAL, scheduled)
   return scheduled
 }

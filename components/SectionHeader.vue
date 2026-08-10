@@ -1,7 +1,7 @@
 <template>
   <view class="section-header">
     <text class="section-header__title">{{ title }}</text>
-    <text class="section-header__more" @tap="onMoreTap">{{ moreText }}</text>
+    <text v-if="showMore" class="section-header__more" @tap="onMoreTap">{{ moreText }}</text>
   </view>
 </template>
 
@@ -16,14 +16,14 @@ export default {
     moreText: {
       type: String,
       default: '查看更多'
+    },
+    showMore: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
     onMoreTap() {
-      uni.showToast({
-        title: '更多内容正在完善',
-        icon: 'none'
-      })
       this.$emit('more')
     }
   }

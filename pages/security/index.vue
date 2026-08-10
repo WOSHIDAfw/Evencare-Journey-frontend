@@ -70,7 +70,13 @@ export default {
       })
     },
     openFeature(item) {
-      uni.showToast({ title: `${this.t(item.labelKey)}：${this.t('common.improving')}`, icon: 'none' })
+      const messages = {
+        'security.contacts': '请在设置中的家庭监护里管理联系人',
+        'security.shareLocation': '当前位置仅在您主动授权后共享',
+        'security.hospitals': '暂无附近医院数据',
+        'security.sosSettings': '当前已启用 SOS 二次确认'
+      }
+      uni.showToast({ title: messages[item.labelKey] || '暂无相关信息', icon: 'none' })
     }
   }
 }

@@ -21,16 +21,14 @@
 
       <view class="section-heading">{{ t('wellness.reminders') }}</view>
       <view class="reminders">
-        <view v-for="(reminder, index) in reminders" :key="reminder.name" class="reminder-row">
+        <view v-for="(reminder, index) in reminders" :key="reminder.name" class="reminder-row" @click="openReminderEditor(index)">
           <view class="reminder-row__icon">{{ reminder.icon }}</view>
-          <view class="reminder-row__content" @click="selectReminderTime(index)">
+          <view class="reminder-row__content">
             <text class="reminder-row__name">{{ reminderLabel(reminder) }}</text>
-            <text class="reminder-row__time">{{ reminder.labelKey ? t(reminder.labelKey) : t('wellness.everyDay', { time: reminder.time }) }}</text>
+            <text class="reminder-row__time">{{ reminderDisplay(reminder) }}</text>
           </view>
-          <switch :checked="reminder.enabled" color="#01884D" @change="toggleReminder(index, $event)" />
-          <picker mode="time" :value="reminder.time" @change="updateReminderTime(index, $event)">
-            <view class="edit-time">{{ t('wellness.edit') }}</view>
-          </picker>
+          <text class="reminder-row__status">{{ reminder.enabled ? '已开启' : '已关闭' }}</text>
+          <text class="reminder-row__arrow">›</text>
         </view>
       </view>
 
@@ -39,6 +37,28 @@
         <button class="secondary-action" @click="showHealthRecord">{{ t('wellness.healthRecord') }}</button>
       </view>
       <text v-if="sharedNotice" class="shared-notice">此记录已加入家庭共享</text>
+      <view v-if="showRecords" class="record-summary">
+        <text class="record-summary__title">今日健康记录</text>
+        <text v-for="metric in metrics" :key="metric.key">{{ metricLabel(metric) }}：{{ metric.value }} {{ metric.unit }}</text>
+      </view>
+    </view>
+    <view v-if="reminderEditorVisible" class="editor-mask" @click="closeReminderEditor">
+      <view class="reminder-editor" @click.stop>
+        <view class="editor-handle"></view>
+        <text class="editor-title">{{ editingIndex < 0 ? '添加提醒' : '编辑提醒' }}</text>
+        <text class="editor-label">提醒名称</text>
+        <input v-model.trim="draftReminder.name" class="editor-input" placeholder="请输入提醒名称" />
+        <text class="editor-label">提醒时间</text>
+        <picker mode="time" :value="draftReminder.time" @change="changeDraftTime">
+          <view class="editor-time">{{ draftReminder.time.replace(':', ' : ') }}</view>
+        </picker>
+        <text class="editor-label">重复</text>
+        <picker mode="selector" :range="repeatOptions" :value="repeatIndex" @change="changeRepeat">
+          <view class="editor-select">{{ draftReminder.repeat }}<text>›</text></view>
+        </picker>
+        <view class="editor-status"><text>状态</text><view class="editor-status__right"><text>{{ draftReminder.enabled ? '开启' : '关闭' }}</text><switch :checked="draftReminder.enabled" color="#01884D" @change="changeDraftStatus" /></view></view>
+        <view class="editor-buttons"><button class="editor-cancel" @click="closeReminderEditor">取消</button><button class="editor-save" @click="saveReminder">保存</button></view>
+      </view>
     </view>
   </PageLayout>
 </template>
@@ -57,6 +77,11 @@ export default {
     return {
       recordedCount: 3,
       sharedNotice: false,
+      showRecords: false,
+      reminderEditorVisible: false,
+      editingIndex: -1,
+      repeatOptions: ['每天', '每 1 小时', '每 2 小时', '每 3 小时'],
+      draftReminder: { name: '', time: '09:00', repeat: '每天', enabled: true },
       metrics: [
         { key: 'heartRate', icon: '♥', name: '心率', value: '72', unit: '次/分钟' },
         { key: 'bloodPressure', icon: '压', name: '血压', value: '128 / 78', unit: 'mmHg' },
@@ -79,6 +104,10 @@ export default {
     if (stored && Number.isFinite(stored.recordedCount)) this.recordedCount = stored.recordedCount
   },
   methods: {
+    reminderDisplay(reminder) {
+      const repeat = reminder.repeat || (reminder.labelKey ? '每 2 小时' : '每天')
+      return repeat === '每天' ? `每天 ${reminder.time}` : repeat
+    },
     metricLabel(metric) {
       const keys = { heartRate: 'wellness.heartRate', bloodPressure: 'wellness.bloodPressure', bloodOxygen: 'wellness.bloodOxygen', temperature: 'wellness.temperature' }
       return this.t(keys[metric.key])
@@ -111,33 +140,47 @@ export default {
         }
       })
     },
-    toggleReminder(index, event) {
-      this.reminders[index].enabled = event.detail.value
-      this.persist()
+    openReminderEditor(index) {
+      const reminder = this.reminders[index]
+      this.editingIndex = index
+      this.draftReminder = {
+        name: this.reminderLabel(reminder),
+        time: reminder.time || '09:00',
+        repeat: reminder.repeat || (reminder.labelKey ? '每 2 小时' : '每天'),
+        enabled: reminder.enabled !== false,
+        icon: reminder.icon || '醒'
+      }
+      this.reminderEditorVisible = true
     },
-    updateReminderTime(index, event) {
-      this.reminders[index].time = event.detail.value
-      this.reminders[index].label = ''
-      this.persist()
+    closeReminderEditor() {
+      this.reminderEditorVisible = false
+      this.editingIndex = -1
     },
-    selectReminderTime() {},
+    changeDraftTime(event) { this.draftReminder.time = event.detail.value },
+    changeRepeat(event) { this.draftReminder.repeat = this.repeatOptions[Number(event.detail.value)] },
+    changeDraftStatus(event) { this.draftReminder.enabled = event.detail.value },
+    saveReminder() {
+      if (!this.draftReminder.name) return uni.showToast({ title: '请输入提醒名称', icon: 'none' })
+      const reminder = { ...this.draftReminder, nameKey: '', labelKey: '' }
+      if (this.editingIndex < 0) this.reminders.push(reminder)
+      else this.reminders.splice(this.editingIndex, 1, reminder)
+      this.persist()
+      this.closeReminderEditor()
+      uni.showToast({ title: '提醒已保存', icon: 'success' })
+    },
     addReminder() {
-      uni.showModal({
-        title: this.t('wellness.addReminder'),
-        content: this.t('wellness.reminderName'),
-        editable: true,
-        placeholderText: this.t('wellness.reminderExample'),
-        success: ({ confirm, content }) => {
-          const name = String(content || '').trim()
-          if (!confirm || !name) return
-          this.reminders.push({ icon: '醒', name, time: '09:00', enabled: true })
-          this.persist()
-          uni.showToast({ title: this.t('wellness.added'), icon: 'none' })
-        }
-      })
+      this.editingIndex = -1
+      this.draftReminder = { name: '', time: '09:00', repeat: '每天', enabled: true, icon: '醒' }
+      this.reminderEditorVisible = true
     },
     showHealthRecord() {
-      uni.showToast({ title: this.t('wellness.healthComing'), icon: 'none' })
+      this.showRecords = !this.showRecords
+    }
+  },
+  computed: {
+    repeatIndex() {
+      const index = this.repeatOptions.indexOf(this.draftReminder.repeat)
+      return index < 0 ? 0 : index
     }
   }
 }
@@ -159,16 +202,33 @@ export default {
 .metric-card__unit { color: #66716b; font-size: 23rpx; font-weight: 400; }
 .record-button { width: 100%; height: 76rpx; margin: auto 0 0; border: none; border-radius: 16rpx; background: #e7f6ee; color: #017343; font-size: 30rpx; line-height: 76rpx; }
 .record-button::after, .primary-action::after, .secondary-action::after { border: none; }
-.reminders { border: 2rpx solid #e9eeeb; border-radius: 24rpx; overflow: hidden; }
-.reminder-row { display: flex; align-items: center; min-height: 112rpx; padding: 18rpx 22rpx; border-bottom: 2rpx solid #edf1ef; gap: 18rpx; }
-.reminder-row:last-child { border-bottom: none; }
+.reminders { display: flex; flex-direction: column; gap: 18rpx; }
+.reminder-row { display: flex; align-items: center; min-height: 126rpx; padding: 24rpx; border: 2rpx solid #e9eeeb; border-radius: 24rpx; background: #fff; gap: 18rpx; }
 .reminder-row__content { display: flex; flex: 1; flex-direction: column; }
 .reminder-row__name { color: #222; font-size: 32rpx; font-weight: 600; }
 .reminder-row__time { margin-top: 8rpx; color: #6c756f; font-size: 26rpx; }
-.edit-time { padding: 20rpx 0 20rpx 12rpx; color: #01884d; font-size: 28rpx; }
+.reminder-row__status { color: #397157; font-size: 26rpx; }
+.reminder-row__arrow { color: #8a938e; font-size: 46rpx; }
 .quick-actions { display: flex; gap: 18rpx; margin-top: 30rpx; }
 .primary-action, .secondary-action { flex: 1; height: 104rpx; border-radius: 20rpx; font-size: 32rpx; line-height: 104rpx; }
 .primary-action { background: #01884d; color: #fff; }
 .secondary-action { background: #eef4f0; color: #075f38; }
 .shared-notice { display: block; margin-top: 18rpx; text-align: center; color: #397157; font-size: 26rpx; }
+.record-summary { display: flex; flex-direction: column; gap: 10rpx; margin-top: 22rpx; padding: 26rpx; border-radius: 22rpx; background: #F0FAF5; color: #40554A; font-size: 28rpx; }
+.record-summary__title { margin-bottom: 4rpx; color: #173E2D; font-size: 34rpx; font-weight: 700; }
+.editor-mask { position: fixed; z-index: 80; inset: 0; display: flex; align-items: flex-end; background: rgba(0,0,0,.38); }
+.reminder-editor { width: 100%; padding: 18rpx 40rpx calc(30rpx + env(safe-area-inset-bottom)); border-radius: 36rpx 36rpx 0 0; background: #fff; }
+.editor-handle { width: 82rpx; height: 8rpx; margin: 0 auto 22rpx; border-radius: 8rpx; background: #CCD3CF; }
+.editor-title { display: block; color: #111; font-size: 42rpx; font-weight: 700; }
+.editor-label { display: block; margin: 22rpx 0 10rpx; color: #5F6B65; font-size: 28rpx; }
+.editor-input { height: 94rpx; padding: 0 24rpx; border: 2rpx solid #DCE4DF; border-radius: 18rpx; font-size: 32rpx; }
+.editor-time { display: flex; align-items: center; justify-content: center; height: 126rpx; border: 2rpx solid #CFE9DB; border-radius: 22rpx; background: #F0FAF5; color: #075F38; font-size: 56rpx; font-weight: 700; letter-spacing: 4rpx; }
+.editor-select, .editor-status { display: flex; align-items: center; justify-content: space-between; min-height: 94rpx; padding: 0 24rpx; border: 2rpx solid #E1E7E3; border-radius: 18rpx; color: #222; font-size: 31rpx; }
+.editor-status { margin-top: 20rpx; }
+.editor-status__right { display: flex; align-items: center; gap: 18rpx; color: #397157; }
+.editor-buttons { display: flex; gap: 18rpx; margin-top: 28rpx; }
+.editor-cancel, .editor-save { flex: 1; height: 104rpx; border: none; border-radius: 20rpx; font-size: 34rpx; line-height: 104rpx; }
+.editor-cancel { background: #EEF3F0; color: #4F5D55; }
+.editor-save { background: #01884D; color: #FFF; }
+.editor-cancel::after, .editor-save::after { border: none; }
 </style>

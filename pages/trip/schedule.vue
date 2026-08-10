@@ -6,7 +6,10 @@
       <view class="schedule-page__body">
         <!-- 摘要卡 -->
         <view class="summary-card">
+          <view class="summary-card__heading">
           <text class="summary-card__title">成都一日轻松游</text>
+            <text class="summary-card__edit" @tap="goEdit">编辑行程</text>
+          </view>
           <view class="summary-card__row">
             <text class="summary-card__date">{{ dateLabel }}</text>
             <text class="summary-card__depart">预计 {{ departTime }} 出发</text>
@@ -46,6 +49,7 @@
                 <text class="timeline-item__time">{{ place.scheduleTime }}</text>
                 <text class="timeline-item__name">{{ place.name }}</text>
                 <text class="timeline-item__visit">{{ place.visitLabel }}</text>
+                <text class="timeline-item__edit" @tap="openPlaceActions(index)">编辑</text>
               </view>
             </view>
           </view>
@@ -58,22 +62,52 @@
         <text class="schedule-page__start-text">开始行程</text>
       </view>
     </view>
+
+    <view v-if="sheetMode" class="sheet-mask" @tap="closeSheet">
+      <view class="edit-sheet" @tap.stop>
+        <view class="edit-sheet__handle"></view>
+        <template v-if="sheetMode === 'actions'">
+          <text class="edit-sheet__title">调整地点</text>
+          <text class="edit-sheet__place">{{ activePlace && activePlace.name }}</text>
+          <button class="sheet-action" @tap="openTimeEditor">修改时间</button>
+          <button class="sheet-action sheet-action--danger" @tap="confirmDelete">删除此地点</button>
+          <button class="sheet-cancel" @tap="closeSheet">取消</button>
+        </template>
+        <template v-else>
+          <text class="edit-sheet__title">修改到达时间</text>
+          <text class="edit-sheet__label">当前地点</text>
+          <text class="edit-sheet__place">{{ activePlace && activePlace.name }}</text>
+          <text class="edit-sheet__label">当前时间</text>
+          <picker mode="time" :value="draftTime" @change="onTimeChange">
+            <view class="time-picker">{{ draftTime.replace(':', ' : ') }}</view>
+          </picker>
+          <button class="sheet-save" @tap="saveTime">保存时间</button>
+          <button class="sheet-cancel" @tap="sheetMode = 'actions'">返回</button>
+        </template>
+      </view>
+    </view>
   </view>
 </template>
 
 <script>
 import TripSubNav from '@/components/TripSubNav.vue'
-import { getFinalTripPlaces, getTodayLabel, STORAGE_KEYS, saveSelectedPlaces } from '@/utils/tripUtils.js'
+import { getFinalTripPlaces, getTodayLabel, STORAGE_KEYS, saveSelectedPlaces, saveTripPlaces } from '@/utils/tripUtils.js'
 
 export default {
   components: { TripSubNav },
   data() {
     return {
       places: [],
-      dateLabel: '今天'
+      dateLabel: '今天',
+      activeIndex: -1,
+      sheetMode: '',
+      draftTime: '10:30'
     }
   },
   computed: {
+    activePlace() {
+      return this.activeIndex >= 0 ? this.places[this.activeIndex] : null
+    },
     departTime() {
       return this.places.length > 0 ? this.places[0].scheduleTime : '10:30'
     }
@@ -107,10 +141,55 @@ export default {
     goSearch() {
       uni.navigateTo({ url: '/pages/trip/search' })
     },
+    goEdit() {
+      saveTripPlaces(this.places)
+      uni.navigateTo({ url: '/pages/trip/edit' })
+    },
+    openPlaceActions(index) {
+      this.activeIndex = index
+      this.draftTime = this.places[index].scheduleTime || '10:30'
+      this.sheetMode = 'actions'
+    },
+    openTimeEditor() {
+      this.sheetMode = 'time'
+    },
+    onTimeChange(event) {
+      this.draftTime = event.detail.value
+    },
+    saveTime() {
+      if (!this.activePlace) return
+      this.places[this.activeIndex].scheduleTime = this.draftTime
+      this.places[this.activeIndex].recommendedTime = this.draftTime
+      this.places = saveTripPlaces(this.places)
+      this.closeSheet()
+      uni.showToast({ title: '到达时间已保存', icon: 'success' })
+    },
+    confirmDelete() {
+      if (!this.activePlace) return
+      const placeName = this.activePlace.name
+      uni.showModal({
+        title: '删除地点',
+        content: `确认从今日行程中删除“${placeName}”吗？`,
+        cancelText: '取消',
+        confirmText: '确认删除',
+        confirmColor: '#E53935',
+        success: ({ confirm }) => {
+          if (!confirm) return
+          this.places.splice(this.activeIndex, 1)
+          this.places = saveTripPlaces(this.places)
+          this.closeSheet()
+          uni.showToast({ title: '已删除', icon: 'none' })
+        }
+      })
+    },
+    closeSheet() {
+      this.sheetMode = ''
+      this.activeIndex = -1
+    },
     onStartTrip() {
       uni.showModal({
         title: '开始导航',
-        content: '真实导航将在下一阶段接入，现在可以先查看地图路线。',
+        content: '当前提供行程地图预览，是否现在查看？',
         confirmText: '查看地图',
         cancelText: '暂不开始',
         success: (res) => {
@@ -154,6 +233,23 @@ export default {
   font-weight: 600;
   color: #111111;
   line-height: 1.35;
+}
+
+.summary-card__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.summary-card__edit {
+  flex-shrink: 0;
+  padding: 12rpx 20rpx;
+  border: 2rpx solid #01884D;
+  border-radius: 999rpx;
+  color: #01884D;
+  font-size: 28rpx;
+  font-weight: 600;
 }
 
 .summary-card__row {
@@ -295,6 +391,17 @@ export default {
   margin-top: 8rpx;
 }
 
+.timeline-item__edit {
+  display: inline-flex;
+  margin-top: 14rpx;
+  padding: 10rpx 28rpx;
+  border-radius: 999rpx;
+  background: #EFF6EB;
+  color: #01884D;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
 .schedule-page__footer {
   padding: 24rpx 40rpx;
   padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
@@ -317,4 +424,32 @@ export default {
   color: #ffffff;
   font-weight: 500;
 }
+
+.sheet-mask {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+.edit-sheet {
+  width: 100%;
+  padding: 18rpx 40rpx calc(30rpx + env(safe-area-inset-bottom));
+  border-radius: 36rpx 36rpx 0 0;
+  background: #FFFFFF;
+}
+
+.edit-sheet__handle { width: 84rpx; height: 8rpx; margin: 0 auto 24rpx; border-radius: 8rpx; background: #CCD3CF; }
+.edit-sheet__title { display: block; color: #111; font-size: 42rpx; font-weight: 700; }
+.edit-sheet__label { display: block; margin-top: 26rpx; color: #6C756F; font-size: 28rpx; }
+.edit-sheet__place { display: block; margin-top: 8rpx; color: #173E2D; font-size: 38rpx; font-weight: 700; }
+.time-picker { display: flex; align-items: center; justify-content: center; height: 142rpx; margin-top: 16rpx; border: 2rpx solid #CFE9DB; border-radius: 24rpx; background: #F0FAF5; color: #075F38; font-size: 62rpx; font-weight: 700; letter-spacing: 5rpx; }
+.sheet-action, .sheet-save, .sheet-cancel { height: 104rpx; margin-top: 22rpx; border: none; border-radius: 20rpx; font-size: 34rpx; line-height: 104rpx; }
+.sheet-action { background: #EFF6EB; color: #075F38; }
+.sheet-action--danger { background: #FFF0F0; color: #D93632; }
+.sheet-save { background: #01884D; color: #FFF; }
+.sheet-cancel { background: #F1F4F2; color: #56635C; }
+.sheet-action::after, .sheet-save::after, .sheet-cancel::after { border: none; }
 </style>

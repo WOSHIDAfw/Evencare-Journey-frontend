@@ -39,7 +39,7 @@ import TripSubNav from '@/components/TripSubNav.vue'
 import PlaceCard from '@/components/PlaceCard.vue'
 import { selectPagePlaces } from '@/utils/mockData.js'
 import { enrichPlacesWithCoords } from '@/utils/geoService.js'
-import { saveSelectedPlaces } from '@/utils/tripUtils.js'
+import { getSelectedPlaces, saveTripPlaces } from '@/utils/tripUtils.js'
 
 export default {
   components: { TripSubNav, PlaceCard },
@@ -49,6 +49,14 @@ export default {
       selectedIds: [],
       selectedMap: {}
     }
+  },
+  onLoad() {
+    const selected = getSelectedPlaces()
+    this.selectedIds = selected.map((place) => place.id)
+    this.selectedMap = selected.reduce((map, place) => {
+      map[place.id] = place
+      return map
+    }, {})
   },
   methods: {
     onAddChange({ id, isAdded, place }) {
@@ -67,8 +75,10 @@ export default {
         uni.showToast({ title: '请至少选择一个地点', icon: 'none' })
         return
       }
-      const ordered = this.places.filter((p) => this.selectedIds.includes(p.id))
-      saveSelectedPlaces(ordered)
+      const existing = getSelectedPlaces().filter((place) => this.selectedIds.includes(place.id))
+      const existingIds = existing.map((place) => place.id)
+      const added = this.places.filter((place) => this.selectedIds.includes(place.id) && !existingIds.includes(place.id))
+      saveTripPlaces([...existing, ...added])
       uni.navigateTo({ url: '/pages/trip/edit' })
     }
   }

@@ -5,7 +5,6 @@
       <text class="label">手机号码</text>
       <view class="phone-input"><text class="prefix">+86</text><input v-model="phone" type="number" maxlength="11" placeholder="请输入手机号码" /></view>
       <button class="primary" @click="getCode">获取验证码</button>
-      <button class="text-button" @click="emailTip">使用邮箱登录</button>
     </view>
     <view class="agreement"><text>登录即表示您已阅读并同意</text><view><text class="link">《用户协议》</text><text class="link">《隐私政策》</text></view></view>
   </view>
@@ -21,8 +20,7 @@ export default {
       if (!/^1\d{10}$/.test(this.phone)) return uni.showToast({ title: '请输入正确的手机号码', icon: 'none' })
       uni.setStorageSync(PENDING_PHONE_KEY, this.phone)
       uni.navigateTo({ url: '/pages/auth/verify-code' })
-    },
-    emailTip() { uni.showToast({ title: '邮箱登录功能正在完善', icon: 'none' }) }
+    }
   }
 }
 </script>

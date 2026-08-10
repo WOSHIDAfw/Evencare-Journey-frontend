@@ -75,6 +75,9 @@
           <uni-icons type="map" size="20" color="#01884D" />
           <text class="edit-page__map-btn-text">在地图上查看</text>
         </view>
+        <view v-if="places.length > 0" class="edit-page__add-btn" @tap="goSelect">
+          <text>＋ 添加景点</text>
+        </view>
       </view>
     </scroll-view>
   </view>
@@ -84,7 +87,8 @@
 import TripSubNav from '@/components/TripSubNav.vue'
 import {
   getSelectedPlaces,
-  saveSelectedPlaces,
+  getFinalTripPlaces,
+  saveTripPlaces,
   assignScheduleToPlaces
 } from '@/utils/tripUtils.js'
 
@@ -100,11 +104,15 @@ export default {
   },
   methods: {
     loadPlaces() {
-      const raw = getSelectedPlaces()
+      const finalPlaces = getFinalTripPlaces()
+      const raw = finalPlaces.length > 0 ? finalPlaces : getSelectedPlaces()
       this.places = assignScheduleToPlaces(raw).map((p) => ({ ...p, _imgError: false }))
     },
     persist() {
-      saveSelectedPlaces(this.places)
+      this.places = saveTripPlaces(this.places).map((p) => ({
+        ...p,
+        _imgError: p._imgError || false
+      }))
     },
     onImgError(index) {
       this.places[index]._imgError = true
@@ -334,5 +342,17 @@ export default {
   font-size: 34rpx;
   color: #01884D;
   font-weight: 500;
+}
+
+.edit-page__add-btn {
+  margin-top: 20rpx;
+  height: 96rpx;
+  border-radius: 999rpx;
+  background: #EFF6EB;
+  color: #01884D;
+  font-size: 34rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

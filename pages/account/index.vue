@@ -86,7 +86,14 @@ export default {
         uni.showModal({ title: this.t('settings.logout'), content: this.t('settings.logoutConfirm'), cancelText: this.t('common.cancel'), confirmText: this.t('common.confirm'), confirmColor: '#E53935', success: ({ confirm }) => { if (confirm) { logout(); uni.reLaunch({ url: '/pages/auth/login' }) } } })
         return
       }
-      uni.showToast({ title: `${this.t(item.labelKey)}：${this.t('common.improving')}`, icon: 'none' })
+      if (item.key === 'trips') return uni.switchTab({ url: '/pages/trip/index' })
+      const states = {
+        profile: '当前资料：李明，68岁，成都', contacts: '尚未添加独立紧急联系人', favorites: '暂无收藏',
+        notifications: '暂无新消息', seniorMode: '当前使用标准大字体', privacy: '仅保存必要的本地演示数据',
+        safety: '账号登录与 SOS 均已启用确认保护', agreement: '您已同意《用户协议》',
+        feedback: '暂无待处理反馈', about: '银发悠旅 1.0.0'
+      }
+      uni.showToast({ title: states[item.key] || '暂无可调整内容', icon: 'none' })
     }
   }
 }
