@@ -100,12 +100,6 @@
         "selectedIconPath": "static/tab/trip-active.png"
       },
       {
-        "pagePath": "pages/navigator/index",
-        "text": "导航",
-        "iconPath": "static/tab/navigator.png",
-        "selectedIconPath": "static/tab/navigator-active.png"
-      },
-      {
         "pagePath": "pages/wellness/index",
         "text": "康养",
         "iconPath": "static/tab/wellness.png",
@@ -119,7 +113,7 @@
       },
       {
         "pagePath": "pages/account/index",
-        "text": "我的",
+        "text": "设置",
         "iconPath": "static/tab/account.png",
         "selectedIconPath": "static/tab/account-active.png"
       }
