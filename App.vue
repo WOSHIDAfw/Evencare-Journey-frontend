@@ -1,12 +1,14 @@
 <script>
 import { initLocale, applyTabBarLabels } from '@/utils/i18n.js'
-import { LOGIN_KEY } from '@/utils/auth.js'
+import { DEV_MODE, LOGIN_KEY } from '@/utils/auth.js'
 
 export default {
   onLaunch() {
     initLocale()
-    if (uni.getStorageSync(LOGIN_KEY) !== true) {
+    if (DEV_MODE || uni.getStorageSync(LOGIN_KEY) !== true) {
       setTimeout(() => uni.reLaunch({ url: '/pages/auth/login' }), 0)
+    } else {
+      setTimeout(() => uni.switchTab({ url: '/pages/trip/index' }), 0)
     }
     console.log('银发悠旅 App Launch')
   },

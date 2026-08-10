@@ -92,6 +92,9 @@
 <script>
 import TripSubNav from '@/components/TripSubNav.vue'
 import { getFinalTripPlaces, getTodayLabel, STORAGE_KEYS, saveSelectedPlaces, saveTripPlaces } from '@/utils/tripUtils.js'
+import { recommendedPlaces } from '@/utils/mockData.js'
+
+const WUHOU_RESTORE_KEY = 'restoredWuhouci0930'
 
 export default {
   components: { TripSubNav },
@@ -118,6 +121,16 @@ export default {
   methods: {
     loadTrip() {
       this.places = getFinalTripPlaces()
+      if (!uni.getStorageSync(WUHOU_RESTORE_KEY) && !this.places.some((place) => place.id === 'wuhouci')) {
+        const wuhouci = recommendedPlaces.find((place) => place.id === 'wuhouci')
+        if (wuhouci) {
+          this.places = saveTripPlaces([
+            { ...wuhouci, scheduleTime: '09:30', recommendedTime: '09:30' },
+            ...this.places
+          ])
+        }
+        uni.setStorageSync(WUHOU_RESTORE_KEY, true)
+      }
       try {
         const storedDate = uni.getStorageSync(STORAGE_KEYS.TRIP_DATE)
         const today = new Date()
