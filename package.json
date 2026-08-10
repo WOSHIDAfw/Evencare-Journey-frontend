@@ -1,0 +1,16 @@
+{
+  "name": "evencare_pro_0810",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@dcloudio/uni-ui": "^1.5.12"
+  }
+}

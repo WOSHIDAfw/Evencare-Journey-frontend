@@ -1,0 +1,129 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/trip/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "行程"
+      }
+    },
+    {
+      "path": "pages/trip/search",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "搜索目的地"
+      }
+    },
+    {
+      "path": "pages/trip/select",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "选择景点"
+      }
+    },
+    {
+      "path": "pages/trip/edit",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "编辑行程"
+      }
+    },
+    {
+      "path": "pages/trip/map",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "行程地图"
+      }
+    },
+    {
+      "path": "pages/trip/schedule",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "今日行程"
+      }
+    },
+    {
+      "path": "pages/navigator/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "导航"
+      }
+    },
+    {
+      "path": "pages/wellness/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "康养"
+      }
+    },
+    {
+      "path": "pages/security/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "安全"
+      }
+    },
+    {
+      "path": "pages/account/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "银发悠旅",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FFFFFF"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#01884D",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "fontSize": "16px",
+    "iconWidth": "32px",
+    "spacing": "6px",
+    "height": "64px",
+    "list": [
+      {
+        "pagePath": "pages/trip/index",
+        "text": "行程",
+        "iconPath": "static/tab/trip.png",
+        "selectedIconPath": "static/tab/trip-active.png"
+      },
+      {
+        "pagePath": "pages/navigator/index",
+        "text": "导航",
+        "iconPath": "static/tab/navigator.png",
+        "selectedIconPath": "static/tab/navigator-active.png"
+      },
+      {
+        "pagePath": "pages/wellness/index",
+        "text": "康养",
+        "iconPath": "static/tab/wellness.png",
+        "selectedIconPath": "static/tab/wellness-active.png"
+      },
+      {
+        "pagePath": "pages/security/index",
+        "text": "安全",
+        "iconPath": "static/tab/security.png",
+        "selectedIconPath": "static/tab/security-active.png"
+      },
+      {
+        "pagePath": "pages/account/index",
+        "text": "我的",
+        "iconPath": "static/tab/account.png",
+        "selectedIconPath": "static/tab/account-active.png"
+      }
+    ]
+  },
+  "uniIdRouter": {}
+}
